@@ -1,2 +1,2 @@
 # PythonBackend
-Aplicacion de usuarios y fundamentos de FastApi
+Aplicacion de usuarios con Python y fundamentos de FastApi.
