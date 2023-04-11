@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 app = FastAPI()
@@ -17,36 +17,36 @@ users_list = [User(id=1, name="Nicolás", surname="Castelli", age=23, email="ggg
               User(id=3, name="Joaquin", surname="Almagro", age=43, email="Almagro@Joa.com")]
 
 
-@app.get("/users")
+@app.get("/users", status_code=200)
 async def users():
     # Una lista vacia se interpreta como False en Python
     if not users_list:
-        return {"error": "No existen usuarios"}
+        raise HTTPException(status_code=204)
     return users_list
 
 
 # Path (el id es obligatorio)
-@app.get("/user/{id}")
+@app.get("/user/{id}", response_model=User, status_code=200)
 async def user(id: int):
     return search_users(id)
 
 
 # Query
-@app.get("/user/")
+@app.get("/user/", response_model=User, status_code=200)
 async def user(id: int):
     return search_users(id)
 
 
-@app.post("/user/", status_code=201)
+@app.post("/user/", response_model=User, status_code=201)
 async def userAdd(user: User):
-    if type(search_users(user.id)) == User:
-        return {"error": "El usuario ya existe"}
-    else:
-        users_list.append(user)
-        return "Se ha agregado:", user
+    for existing_user in users_list:
+        if existing_user.id == user.id:
+            raise HTTPException(status_code=400, detail="El usuario ya existe")
+    users_list.append(user)
+    return user
 
 
-@app.put("/user/")
+@app.put("/user/", response_model=User, status_code=200)
 async def userPut(user: User):
     found = False
     for index, user_found in enumerate(users_list):
@@ -54,12 +54,12 @@ async def userPut(user: User):
             users_list[index] = user
             found = True
     if not found:
-        return {"error": "Usuario no se ha actualizado"}
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
     else:
         return user
 
 
-@app.delete("/user/{id}")
+@app.delete("/user/{id}", status_code=200)
 async def userDelete(id: int):
     found = False
     for index, user_found in enumerate(users_list):
@@ -67,7 +67,7 @@ async def userDelete(id: int):
             del users_list[index]
             found = True
     if not found:
-        return {"error": "Usuario no se ha borrado"}
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
     else:
         return {"Se ha borrado el usuario"}
 
@@ -79,4 +79,4 @@ def search_users(id):
         # la funcion list me permite obtener los elementos originales del objeto iterador
         return list(userss)[0]
     except:
-        return "{error: Usuario no encontrado}"
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
