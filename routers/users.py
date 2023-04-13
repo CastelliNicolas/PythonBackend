@@ -1,7 +1,7 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-app = FastAPI()
+router = APIRouter()
 
 
 class User(BaseModel):
@@ -17,7 +17,7 @@ users_list = [User(id=1, name="Nicolás", surname="Castelli", age=23, email="ggg
               User(id=3, name="Joaquin", surname="Almagro", age=43, email="Almagro@Joa.com")]
 
 
-@app.get("/users", status_code=200)
+@router.get("/users", status_code=200)
 async def users():
     # Una lista vacia se interpreta como False en Python
     if not users_list:
@@ -26,18 +26,18 @@ async def users():
 
 
 # Path (el id es obligatorio)
-@app.get("/user/{id}", response_model=User, status_code=200)
+@router.get("/user/{id}", response_model=User, status_code=200)
 async def user(id: int):
     return search_users(id)
 
 
 # Query
-@app.get("/user/", response_model=User, status_code=200)
+@router.get("/user/", response_model=User, status_code=200)
 async def user(id: int):
     return search_users(id)
 
 
-@app.post("/user/", response_model=User, status_code=201)
+@router.post("/user/", response_model=User, status_code=201)
 async def userAdd(user: User):
     for existing_user in users_list:
         if existing_user.id == user.id:
@@ -46,7 +46,7 @@ async def userAdd(user: User):
     return user
 
 
-@app.put("/user/", response_model=User, status_code=200)
+@router.put("/user/", response_model=User, status_code=200)
 async def userPut(user: User):
     found = False
     for index, user_found in enumerate(users_list):
@@ -59,7 +59,7 @@ async def userPut(user: User):
         return user
 
 
-@app.delete("/user/{id}", status_code=200)
+@router.delete("/user/{id}", status_code=200)
 async def userDelete(id: int):
     found = False
     for index, user_found in enumerate(users_list):
